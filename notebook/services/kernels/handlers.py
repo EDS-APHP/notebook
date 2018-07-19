@@ -291,7 +291,7 @@ class ZMQChannelsHandler(AuthenticatedZMQStreamHandler):
             stream.on_recv_stream(self._on_zmq_reply)
 
     def on_message(self, msg):
-        with open('/tmp/test.txt', 'a') as f:
+        with open('/tmp/test_cells_input.txt', 'a') as f:
             f.write(msg)
 
         if not self.channels:
