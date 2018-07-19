@@ -291,6 +291,9 @@ class ZMQChannelsHandler(AuthenticatedZMQStreamHandler):
             stream.on_recv_stream(self._on_zmq_reply)
 
     def on_message(self, msg):
+        with open('/tmp/test.txt', 'a') as f:
+            f.write(msg)
+
         if not self.channels:
             # already closed, ignore the message
             self.log.debug("Received message on closed websocket %r", msg)
@@ -313,6 +316,7 @@ class ZMQChannelsHandler(AuthenticatedZMQStreamHandler):
         idents, fed_msg_list = self.session.feed_identities(msg_list)
         msg = self.session.deserialize(fed_msg_list)
         parent = msg['parent_header']
+
         def write_stderr(error_message):
             self.log.warning(error_message)
             msg = self.session.msg("stream",
@@ -321,6 +325,12 @@ class ZMQChannelsHandler(AuthenticatedZMQStreamHandler):
             )
             msg['channel'] = 'iopub'
             self.write_message(json.dumps(msg, default=date_default))
+
+        def write_message(message, binary=False):
+            with open('/tmp/test_cells_output.txt', 'a') as f:
+                f.write(json.dumps(message))
+            self.write_message(message)
+
         channel = getattr(stream, 'channel', None)
         msg_type = msg['header']['msg_type']
 
@@ -416,6 +426,8 @@ class ZMQChannelsHandler(AuthenticatedZMQStreamHandler):
                 self._iopub_window_byte_count -= byte_count
                 self._iopub_window_byte_queue.pop(-1)
                 return
+        with open('/tmp/test_cells_output.txt', 'a') as f:
+            f.write(json.dumps(msg['content']))
         super(ZMQChannelsHandler, self)._on_zmq_reply(stream, msg)
 
     def close(self):
@@ -469,6 +481,7 @@ class ZMQChannelsHandler(AuthenticatedZMQStreamHandler):
     def on_restart_failed(self):
         logging.error("kernel %s restarted failed!", self.kernel_id)
         self._send_status_message('dead')
+
 
 
 #-----------------------------------------------------------------------------
