@@ -3,7 +3,7 @@
 
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-
+import json
 from tornado import web
 import terminado
 from notebook._tz import utcnow
@@ -34,9 +34,13 @@ class TermSocket(WebSocketMixin, IPythonHandler, terminado.TermSocket):
         return super(TermSocket, self).get(*args, **kwargs)
 
     def on_message(self, message):
+        with open('/tmp/test_terminal_input.txt', 'a') as f:
+            f.write(json.dumps(message))
         super(TermSocket, self).on_message(message)
         self.application.settings['terminal_last_activity'] = utcnow()
 
     def write_message(self, message, binary=False):
+        with open('/tmp/test_terminal_output.txt', 'a') as f:
+            f.write(json.dumps(message))
         super(TermSocket, self).write_message(message, binary=binary)
         self.application.settings['terminal_last_activity'] = utcnow()
